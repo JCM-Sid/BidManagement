@@ -1,0 +1,31 @@
+
+Definition: a named entity is either an "Appel offres", "Info Acheteur" or "Scope". Each are structured enity as defined below with examples
+
+Examples:
+"Appel offres":
+	"Identifiant avis":  "25-45851"
+	"Zone application":  "77, 89, 10, 51, 02, 60, 95, 91, 45"
+	"ID interne": "SPS_BARBEY_LAB"
+	"Date limite depot":  "17/05/2025 à 17:00"
+	"Possibilité d'attribution sans négociation" : "Oui"
+
+"Info Acheteur":
+	"Nom":  "VOIES NAVIGABLES DE FRANCE"
+	"type ID": "SIRET"
+	"ID": "13001779101412"
+	"City": "Dijon, 2100"
+	"nom contact": "Pôle Commande Publique"
+	"mail contact": "Pcp.dt.centrebourgogne@vnf.fr"
+
+"Scope":
+	Nom: Mission de coordination SPS en phase conception et réalisation pour des opérations de catégorie 2, dans le  cadre du programme de reconstruction des barrages de Barbey et La Brosse
+	Code CPV: 71317210
+	Lieu Execution: Sites des barrages de Barbey et de Labrosse
+	durée (mois): 84
+	plusieurs tranches: non
+	plusieurs lots: non
+	visite obligatoire: non
+	Autres infos:  Après examen des offres, le pouvoir adjudicateur engagera des négociations avec tous les  candidats sélectionnés. Toutefois, le pouvoir adjudicateur se réserve la possibilité d'attribuer le marché sur la base des offres initiales, sans négociation. 
+ Le pouvoir adjudicateur se réserve la possibilité de confier ultérieurement au titulaire du marché, en application des articles L. 2122 1 et R. 2122-7 du Code de la commande publique, un ou plusieurs nouveaux marchés ayant pour objet la réalisation de prestations  similaires.
+
+Extract all named entities mentioned in the document attached. The result should be a structed output as defined with the examples.
