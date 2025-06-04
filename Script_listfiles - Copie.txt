@@ -1,20 +1,11 @@
 echo "=== Liste ref EBP ==="
 Get-ChildItem -Path "C:\Users\ATAEM08\ATAE" -Recurse -File -ErrorAction SilentlyContinue |
-Where-Object { $_.FullName -match "\.pdf$" -and (
-    $_.FullName -match "COMMANDE EBP " -or
-    $_.FullName -match "CDE EBP " -or
-    $_.FullName -match "Commande EBP "
-) } |
+Where-Object { $_.FullName -match ".pdf" -and {$_.FullName -match "COMMANDE EBP " or $_.FullName -match "CDE EBP " or $_.FullName -match "Commande EBP "} } | 
 ForEach-Object { "$($_.DirectoryName)\$($_.Name)" }
 
 echo "==========================="
 echo "=== Liste fichiers CCTP ==="
 Get-ChildItem -Path "C:\Users\ATAEM08\ATAE" -Recurse -File -ErrorAction SilentlyContinue |
-Where-Object { $_.FullName -match "\.pdf$" -and (
-    $_.FullName -match "CCTP" -or
-    $_.FullName -match "CCAP" -or
-    $_.FullName -match "RC" -or
-    $_.FullName -match "memoire technique"
-) } |
+Where-Object { $_.FullName -match ".pdf" -and {$_.FullName -match "CCTP" or $_.FullName -match "CCAP" or $_.FullName -match "RC" or or $_.FullName -match "memoire technique"} } | 
 ForEach-Object { "$($_.DirectoryName)\$($_.Name)" }
 
