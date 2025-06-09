@@ -1,6 +1,9 @@
 import textwrap
 import json
 import pandas as pd
+import fitz
+import os
+
 
 def print_text_wrapped(text, max_chars_per_line=90):
     """
@@ -37,20 +40,23 @@ def print_text_wrapped(text, max_chars_per_line=90):
 def print_json_info_cctp(text_json):
     
     # Délimiteurs du bloc JSON
-    start_delimiter = "```json"
+    start_delimiter1 = "```json"
+    start_delimiter2 = "```"
     end_delimiter = "```"
     pure_json_str= ""
 
     # Trouver la position du début du JSON
-    start_index = text_json.find(start_delimiter)
-    if start_index == -1:
-        print("Erreur : Le délimiteur de début JSON n'a pas été trouvé.")
-        return # Exit the function if the start delimiter is not found
-    else:
-    # Ajuster l'index pour commencer juste après le délimiteur
-        json_start = start_index + len(start_delimiter)
+    start_index1 = text_json.find(start_delimiter1)
+    start_index2 = text_json.find(start_delimiter2)
+    if start_index1 != -1:
+        start_index = start_index1
+        start_delimiter = start_delimiter1
+    elif start_index2 != -1:
+        start_index = start_index2
+        start_delimiter = start_delimiter2
 
     # Trouver la position de la fin du JSON
+    json_start = start_index + len(start_delimiter)
     end_index = text_json.find(end_delimiter, json_start)
     if end_index == -1:
         print("Erreur : Le délimiteur de fin JSON n'a pas été trouvé.")
@@ -58,14 +64,14 @@ def print_json_info_cctp(text_json):
     else:
         # Extraire la sous-chaîne qui contient uniquement le JSON
         pure_json_str = text_json[json_start:end_index].strip()
-
+        #print(pure_json_str)
         try:
             # Charger la chaîne JSON dans un dictionnaire Python
             chantier_info = json.loads(pure_json_str)
 
-            print("JSON extrait et chargé dans un dictionnaire Python :")
-            print(chantier_info)
-            print(f"\nType de l'objet : {type(chantier_info)}")
+            #print("JSON extrait et chargé dans un dictionnaire Python :")
+            #print(chantier_info)
+            #print(f"\nType de l'objet : {type(chantier_info)}")
 
             # Vous pouvez maintenant accéder aux données comme un dictionnaire normal
             keys_to_display = [
@@ -74,14 +80,13 @@ def print_json_info_cctp(text_json):
             'Maitre ouvrage',
             'Maitre oeuvre' , 
             'Type de Travaux',
-            'Phase de la mission',
+            'Planning previsionnel',
             'Durée Prévisionnelle des Travaux (en mois)',
-            'Prix des travaux (en euros HT)',
+            'Prix des travaux (en euros)',
             'Categorie operation SPS'
             ]
 
-            not_present = "*** pas dispo ***"
-            print("\nAccès aux données du dictionnaire :")
+            print("\nAccès aux données extraites :")
             for key in keys_to_display:
                 if key in chantier_info:
                     print(f"{key}: {chantier_info[key]}")
@@ -96,3 +101,20 @@ def print_json_info_cctp(text_json):
 
     return pure_json_str
 
+def loadpdf_as_text(file_path):
+
+    text_extract = ""
+    if os.path.exists(file_path):
+        try:
+            doc = fitz.open(file_path)
+            for page_num in range(doc.page_count):
+                page = doc.load_page(page_num)
+                text_extract += page.get_text()
+            doc.close()
+            return text_extract
+        except Exception as e:
+            print(f"Error processing PDF file: {e}")
+            return text_extract
+    else:
+        print(f"Error: File not found at {file_path}")
+        return text_extract
