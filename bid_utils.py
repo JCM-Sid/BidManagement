@@ -3,6 +3,10 @@ import json
 import pandas as pd
 import fitz
 import os
+from IPython.display import display, HTML
+from PIL import Image
+import pytesseract
+import io
 
 
 def print_text_wrapped(text, max_chars_per_line=90):
@@ -42,19 +46,25 @@ def print_json_info_cctp(text_json):
     # Délimiteurs du bloc JSON
     start_delimiter1 = "```json"
     start_delimiter2 = "```"
+    start_delimiter3 = "{"
     end_delimiter = "```"
     pure_json_str= ""
 
     # Trouver la position du début du JSON
     start_index1 = text_json.find(start_delimiter1)
     start_index2 = text_json.find(start_delimiter2)
+    start_index3 = text_json.find(start_delimiter3)
     if start_index1 != -1:
         start_index = start_index1
         start_delimiter = start_delimiter1
     elif start_index2 != -1:
         start_index = start_index2
         start_delimiter = start_delimiter2
-
+    elif start_index3 != -1:    
+        start_index = start_index3
+        start_delimiter = start_delimiter3
+        end_delimiter = "}"
+        
     # Trouver la position de la fin du JSON
     json_start = start_index + len(start_delimiter)
     end_index = text_json.find(end_delimiter, json_start)
@@ -101,8 +111,8 @@ def print_json_info_cctp(text_json):
 
     return pure_json_str
 
+"""
 def loadpdf_as_text(file_path):
-
     text_extract = ""
     if os.path.exists(file_path):
         try:
@@ -118,3 +128,57 @@ def loadpdf_as_text(file_path):
     else:
         print(f"Error: File not found at {file_path}")
         return text_extract
+"""
+
+def loadpdf_as_text(file_path, ocr_threshold=20):
+    """
+    Extract text from a PDF file. If a page contains little or no text,
+    perform OCR to extract text from images (for scanned PDFs).
+    :param file_path: Path to the PDF file.
+    :param ocr_threshold: Minimum number of characters to consider a page as 'textual'.
+    :return: Extracted text as a string.
+    """
+    text_extract = ""
+    if os.path.exists(file_path):
+        try:
+            doc = fitz.open(file_path)
+            for page_num in range(doc.page_count):
+                page = doc.load_page(page_num)
+                text = page.get_text()
+                # If not enough text, try OCR
+                if len(text.strip()) < ocr_threshold:
+                    # Render page as image
+                    pix = page.get_pixmap(dpi=300)
+                    img = Image.open(io.BytesIO(pix.tobytes("png")))
+                    text = pytesseract.image_to_string(img, lang='fra')  # or 'fra' for French
+                text_extract += text + "\n"
+            doc.close()
+            return text_extract
+        except Exception as e:
+            print(f"Error processing PDF file: {e}")
+            return text_extract
+    else:
+        print(f"Error: File not found at {file_path}")
+        return text_extract
+
+
+def path_to_link(file_path, option=None):
+    full_path = file_path.strip()
+    nb_segment = file_path.split("\\")
+    file_name = nb_segment[-1].strip()
+    if os.path.exists(full_path.strip()):
+        nb_segment = file_path.split("\\")
+        file_name = nb_segment[-1].strip()
+        file_url = 'file:///' + full_path.replace('\\', '/')
+        if option == None:
+            display(HTML(f'<a href="{file_url}">{file_path}</a>'))
+        elif option == "link":
+            display(HTML(f'<a href="{file_url}">Link</a>'))
+        elif option == "name":
+            display(HTML(f'<a href="{file_url}">{file_name}</a>'))
+        else:
+            print("warning: Option not valid")
+            display(HTML(f'<a href="{file_url}">{file_path}</a>'))
+    else:
+        print("warning: Fichier non accessible")
+
