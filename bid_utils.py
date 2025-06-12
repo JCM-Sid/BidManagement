@@ -182,3 +182,141 @@ def path_to_link(file_path, option=None):
     else:
         print("warning: Fichier non accessible")
 
+
+def update_df_with_json_cctp(json_string, ebp_id, df_update):
+    try:
+        parsed_json = json.loads(json_string)
+        
+        # Extrait chaque clef
+        nom_value = parsed_json.get("Nom Chantier")
+        lieu_value = parsed_json.get("Lieu du Chantier")
+        type_travaux_value = parsed_json.get("Type de Travaux")
+        planning_concept_value = parsed_json.get("Planning phase conception")
+        planning_real_value = parsed_json.get("Planning phase realistion")
+        duree_travaux_value = parsed_json.get("Duree des travaux")
+        prix_travaux_value = parsed_json.get("Prix des travaux")
+        cat_sps_value = parsed_json.get("Categorie operation SPS")
+        moa_value = parsed_json.get("Maitre ouvrage")
+        moe_value = parsed_json.get("Maitre oeuvre")
+
+        # Mise à jour du df_consult_elevated
+        mask = df_update['ID EBP'] == ebp_id
+        if nom_value is not None:
+            df_update.loc[mask, 'nom_chantier'] = nom_value
+        if lieu_value is not None:
+            df_update.loc[mask, 'lieu'] = lieu_value
+        if type_travaux_value is not None:
+            df_update.loc[mask, 'type travaux'] = type_travaux_value
+        if duree_travaux_value is not None:
+            df_update.loc[mask, 'duree travaux'] = duree_travaux_value
+        if planning_concept_value is not None:
+            df_update.loc[mask, 'planning conception'] = planning_concept_value
+        if planning_real_value is not None:
+            df_update.loc[mask, 'planning realisation '] = planning_real_value
+        if prix_travaux_value is not None:
+            df_update.loc[mask, 'prix travaux'] = prix_travaux_value
+        if moa_value is not None:
+            df_update.loc[mask, 'maitre ouvrage'] = moa_value
+        if moe_value is not None:
+            df_update.loc[mask, 'maitre oeuvre'] = moe_value
+        if cat_sps_value is not None:
+            df_update.loc[mask, 'Categorie operation SPS'] = cat_sps_value
+    
+    except json.JSONDecodeError as e:
+        print(f"Error decoding JSON string: {e}")
+    except TypeError:
+        print("Input is not a string.") 
+    
+format_json_regl = {
+    "Critere Prix": 0,
+    "Critere Technique": {
+        "Moyen Humain et Experience" : 0,
+        "Methodologie" : 0,
+        "Cohérence du temps" : 0
+    }
+} 
+
+def update_df_with_json_regl(json_string, ebp_id, df_update):
+    parsed_json = json.loads(json_string)
+    prix = parsed_json.get("Critere Prix")
+    technique = parsed_json.get("Critere Technique")
+    """
+    parsed_tech = json.loads(technique)
+    moyen_humain = parsed_tech.get("Moyen Humain et Experience")
+    methodologie = technique["Methodologie"]
+    coherence_temps = technique["Cohérence du temps"]
+    """
+    # Mise à jour du df_consult_elevated
+    mask = df_update['ID EBP'] == ebp_id
+    if prix is not None:
+        df_update.loc[mask, 'Critere Prix'] = prix
+    if technique is not None:
+        df_update.loc[mask, 'Critere Tech'] = technique
+
+    """
+    if moyen_humain is not None:
+        df_update.loc[mask, 'Critere Tech-Humain'] = moyen_humain
+    if methodologie is not None:
+        df_update.loc[mask, 'Critere Tech-Method'] = methodologie
+    if coherence_temps is not None:
+        df_update.loc[mask, 'Critere Tech-Temps'] = coherence_temps
+    """
+
+def update_df_with_json_aapc(json_string, ebp_id, df_update):
+    
+    parsed_json = json.loads(json_string)
+
+    Mission = parsed_json.get("Mission")
+    lieu = parsed_json.get("Lieu du Chantier")
+    m_ouvrage = parsed_json.get("Maitre ouvrage")
+    Lot = parsed_json.get("Lot")
+    Tranche = parsed_json.get("Tranche")
+    prix_travaux = parsed_json.get("Prix des travaux")
+    Duree_travaux = parsed_json.get("Duree des travaux")
+    cpv = parsed_json.get("Classification CPV")
+
+    # Mise à jour du df_consult_elevated
+    mask = df_update['ID EBP'] == ebp_id
+    if Mission is not None:
+        df_update.loc[mask, 'Mission aapc'] = Mission
+    if lieu is not None:
+        df_update.loc[mask, 'lieu aapc'] = lieu
+    if m_ouvrage is not None:
+        df_update.loc[mask, 'm_ouvrage aapc'] = m_ouvrage
+    if Lot is not None:
+        df_update.loc[mask, 'Lot aapc'] = Lot
+    if Tranche is not None:
+        df_update.loc[mask, 'Tranche aapc'] = Tranche
+    if prix_travaux is not None:
+        df_update.loc[mask, 'prix_travaux aapc'] = prix_travaux
+    if Duree_travaux is not None:
+        df_update.loc[mask, 'Duree_travaux aapc'] = Duree_travaux
+    if cpv is not None:
+        df_update.loc[mask, 'cpv'] = cpv
+
+def update_df_with_json_ccap(json_string, ebp_id, df_update):
+    
+    parsed_json = json.loads(json_string)
+
+    objet = parsed_json.get("Objet du marché")  
+    lieu = parsed_json.get("Lieu du Chantier")
+    m_ouvrage = parsed_json.get("Maitre ouvrage")
+    m_oeuvre = parsed_json.get("Maitre oeuvre")
+    Lot = parsed_json.get("Lot")
+    Tranche = parsed_json.get("Tranche")
+
+    # Mise à jour du df_consult_elevated
+    mask = df_update['ID EBP'] == ebp_id
+    if objet is not None:
+        df_update.loc[mask, 'objet ccap'] = objet
+    if lieu is not None:
+        df_update.loc[mask, 'lieu ccap'] = lieu
+    if m_ouvrage is not None:
+        df_update.loc[mask, 'm_ouvrage ccap'] = m_ouvrage
+    if m_oeuvre is not None:
+        df_update.loc[mask, 'm_oeuvre ccap'] = m_oeuvre
+    if Lot is not None:
+        df_update.loc[mask, 'Lot ccap'] = Lot
+    if Tranche is not None:
+        df_update.loc[mask, 'Tranche ccap'] = Tranche
+    
