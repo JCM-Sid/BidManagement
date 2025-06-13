@@ -111,25 +111,6 @@ def print_json_info_cctp(text_json):
 
     return pure_json_str
 
-"""
-def loadpdf_as_text(file_path):
-    text_extract = ""
-    if os.path.exists(file_path):
-        try:
-            doc = fitz.open(file_path)
-            for page_num in range(doc.page_count):
-                page = doc.load_page(page_num)
-                text_extract += page.get_text()
-            doc.close()
-            return text_extract
-        except Exception as e:
-            print(f"Error processing PDF file: {e}")
-            return text_extract
-    else:
-        print(f"Error: File not found at {file_path}")
-        return text_extract
-"""
-
 def loadpdf_as_text(file_path, ocr_threshold=20):
     """
     Extract text from a PDF file. If a page contains little or no text,
@@ -203,23 +184,23 @@ def update_df_with_json_cctp(json_string, ebp_id, df_update):
         mask = df_update['ID EBP'] == ebp_id
         if nom_value is not None:
             df_update.loc[mask, 'nom_chantier'] = nom_value
-        if lieu_value is not None:
+        if lieu_value is not None and not isinstance(lieu_value, list):
             df_update.loc[mask, 'lieu'] = lieu_value
-        if type_travaux_value is not None:
+        if type_travaux_value is not None and not isinstance(type_travaux_value, list):
             df_update.loc[mask, 'type travaux'] = type_travaux_value
-        if duree_travaux_value is not None:
+        if duree_travaux_value is not None and not isinstance(duree_travaux_value, list):
             df_update.loc[mask, 'duree travaux'] = duree_travaux_value
-        if planning_concept_value is not None:
+        if planning_concept_value is not None and not isinstance(planning_concept_value, list):
             df_update.loc[mask, 'planning conception'] = planning_concept_value
-        if planning_real_value is not None:
+        if planning_real_value is not None and not isinstance(planning_real_value, list):
             df_update.loc[mask, 'planning realisation '] = planning_real_value
-        if prix_travaux_value is not None:
+        if prix_travaux_value is not None and not isinstance(prix_travaux_value, list):
             df_update.loc[mask, 'prix travaux'] = prix_travaux_value
-        if moa_value is not None:
+        if moa_value is not None and not isinstance(moa_value, list):
             df_update.loc[mask, 'maitre ouvrage'] = moa_value
-        if moe_value is not None:
+        if moe_value is not None and not isinstance(moe_value, list):
             df_update.loc[mask, 'maitre oeuvre'] = moe_value
-        if cat_sps_value is not None:
+        if cat_sps_value is not None and not isinstance(cat_sps_value, list):
             df_update.loc[mask, 'Categorie operation SPS'] = cat_sps_value
     
     except json.JSONDecodeError as e:
