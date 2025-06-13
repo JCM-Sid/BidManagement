@@ -3,11 +3,13 @@ import json
 import pandas as pd
 import fitz
 import os
+import re
 from IPython.display import display, HTML
 from PIL import Image
 import pytesseract
 import io
 
+mot_exclus = ("Non spécifié", "Non disponible", "Non applicable", "Indéterminé" )
 
 def print_text_wrapped(text, max_chars_per_line=90):
     """
@@ -142,7 +144,6 @@ def loadpdf_as_text(file_path, ocr_threshold=20):
         print(f"Error: File not found at {file_path}")
         return text_extract
 
-
 def path_to_link(file_path, option=None):
     full_path = file_path.strip()
     nb_segment = file_path.split("\\")
@@ -163,7 +164,6 @@ def path_to_link(file_path, option=None):
     else:
         print("warning: Fichier non accessible")
 
-
 def update_df_with_json_cctp(json_string, ebp_id, df_update):
     try:
         parsed_json = json.loads(json_string)
@@ -183,42 +183,52 @@ def update_df_with_json_cctp(json_string, ebp_id, df_update):
         # Mise à jour du df_consult_elevated
         mask = df_update['ID EBP'] == ebp_id
         if nom_value is not None:
-            df_update.loc[mask, 'nom_chantier'] = nom_value
+            df_update.loc[mask, 'cctp nom_chantier'] = nom_value
         if lieu_value is not None and not isinstance(lieu_value, list):
-            df_update.loc[mask, 'lieu'] = lieu_value
+            if not any(x in lieu_value for x in mot_exclus):
+                df_update.loc[mask, 'cctp lieu'] = lieu_value
         if type_travaux_value is not None and not isinstance(type_travaux_value, list):
-            df_update.loc[mask, 'type travaux'] = type_travaux_value
+            df_update.loc[mask, 'cctp type travaux'] = type_travaux_value
         if duree_travaux_value is not None and not isinstance(duree_travaux_value, list):
-            df_update.loc[mask, 'duree travaux'] = duree_travaux_value
+            match = re.search(r"\d+", str(duree_travaux_value))
+            if match:
+                duree_int = int(match.group())
+                df_update.loc[mask, 'cctp duree travaux'] = duree_int
+            else:
+                df_update.loc[mask, 'cctp duree travaux'] = None
+            df_update.loc[mask, 'cctp duree travaux'] = duree_travaux_value
         if planning_concept_value is not None and not isinstance(planning_concept_value, list):
-            df_update.loc[mask, 'planning conception'] = planning_concept_value
+            if not any(x in planning_concept_value for x in mot_exclus):
+                df_update.loc[mask, 'cctp planning conception'] = planning_concept_value
         if planning_real_value is not None and not isinstance(planning_real_value, list):
-            df_update.loc[mask, 'planning realisation '] = planning_real_value
+            if "Non spécifié" not in planning_real_value:
+                df_update.loc[mask, 'cctp planning realisation '] = planning_real_value
         if prix_travaux_value is not None and not isinstance(prix_travaux_value, list):
-            df_update.loc[mask, 'prix travaux'] = prix_travaux_value
+            match = re.search(r"\d+", str(prix_travaux_value))
+            if match:
+                prix_int = int(match.group())
+                df_update.loc[mask, 'cctp prix travaux'] = prix_int
+            else:
+                df_update.loc[mask, 'cctp prix travaux'] = None
         if moa_value is not None and not isinstance(moa_value, list):
-            df_update.loc[mask, 'maitre ouvrage'] = moa_value
+            if not any(x in moa_value for x in mot_exclus):
+                df_update.loc[mask, 'cctp maitre ouvrage'] = moa_value
         if moe_value is not None and not isinstance(moe_value, list):
-            df_update.loc[mask, 'maitre oeuvre'] = moe_value
+            if not any(x in moe_value for x in mot_exclus):
+                df_update.loc[mask, 'cctp maitre oeuvre'] = moe_value
         if cat_sps_value is not None and not isinstance(cat_sps_value, list):
-            df_update.loc[mask, 'Categorie operation SPS'] = cat_sps_value
+            if not any(x in cat_sps_value for x in mot_exclus):
+                df_update.loc[mask, 'cctp cat SPS'] = cat_sps_value
     
     except json.JSONDecodeError as e:
         print(f"Error decoding JSON string: {e}")
     except TypeError:
         print("Input is not a string.") 
-    
-format_json_regl = {
-    "Critere Prix": 0,
-    "Critere Technique": {
-        "Moyen Humain et Experience" : 0,
-        "Methodologie" : 0,
-        "Cohérence du temps" : 0
-    }
-} 
 
 def update_df_with_json_regl(json_string, ebp_id, df_update):
     parsed_json = json.loads(json_string)
+    duree_travaux = parsed_json.get("Duree des travaux")
+    prix_travaux = parsed_json.get("Prix des travaux")
     prix = parsed_json.get("Critere Prix")
     technique = parsed_json.get("Critere Technique")
     """
@@ -230,10 +240,15 @@ def update_df_with_json_regl(json_string, ebp_id, df_update):
     # Mise à jour du df_consult_elevated
     mask = df_update['ID EBP'] == ebp_id
     if prix is not None:
-        df_update.loc[mask, 'Critere Prix'] = prix
+        df_update.loc[mask, 'regl crit-prix'] = prix
     if technique is not None:
-        df_update.loc[mask, 'Critere Tech'] = technique
-
+        df_update.loc[mask, 'regl crit-tech'] = technique
+    if duree_travaux is not None and not isinstance(duree_travaux, list):
+        #if not any(x in duree_travaux for x in mot_exclus):
+            df_update.loc[mask, 'regl duree-travaux'] = duree_travaux 
+    if prix_travaux is not None and not isinstance(prix_travaux, list):
+        #if not any(x in prix_travaux for x in mot_exclus):
+            df_update.loc[mask, 'regl prix travaux'] = prix_travaux
     """
     if moyen_humain is not None:
         df_update.loc[mask, 'Critere Tech-Humain'] = moyen_humain
@@ -253,28 +268,31 @@ def update_df_with_json_aapc(json_string, ebp_id, df_update):
     Lot = parsed_json.get("Lot")
     Tranche = parsed_json.get("Tranche")
     prix_travaux = parsed_json.get("Prix des travaux")
-    Duree_travaux = parsed_json.get("Duree des travaux")
-    cpv = parsed_json.get("Classification CPV")
+    duree_travaux = parsed_json.get("Duree des travaux")
 
     # Mise à jour du df_consult_elevated
     mask = df_update['ID EBP'] == ebp_id
     if Mission is not None:
-        df_update.loc[mask, 'Mission aapc'] = Mission
+        df_update.loc[mask, 'aapc mission'] = Mission
     if lieu is not None:
-        df_update.loc[mask, 'lieu aapc'] = lieu
+        if not any(x in lieu for x in mot_exclus):
+            df_update.loc[mask, 'aapc lieu'] = lieu
     if m_ouvrage is not None:
-        df_update.loc[mask, 'm_ouvrage aapc'] = m_ouvrage
+        if not any(x in m_ouvrage for x in mot_exclus):
+            df_update.loc[mask, 'aapc m_ouvrage'] = m_ouvrage
     if Lot is not None:
-        df_update.loc[mask, 'Lot aapc'] = Lot
+        if not any(x in Lot for x in mot_exclus):
+            df_update.loc[mask, 'aapc tot'] = Lot
     if Tranche is not None:
-        df_update.loc[mask, 'Tranche aapc'] = Tranche
+        if not any(x in Tranche for x in mot_exclus):
+            df_update.loc[mask, 'aapc tranche'] = Tranche
     if prix_travaux is not None:
-        df_update.loc[mask, 'prix_travaux aapc'] = prix_travaux
-    if Duree_travaux is not None:
-        df_update.loc[mask, 'Duree_travaux aapc'] = Duree_travaux
-    if cpv is not None:
-        df_update.loc[mask, 'cpv'] = cpv
-
+        #if not any(x in prix_travaux for x in mot_exclus):
+            df_update.loc[mask, 'aapc prix_travaux'] = prix_travaux
+    if duree_travaux is not None:
+        #if not any(x in duree_travaux for x in mot_exclus):
+            df_update.loc[mask, 'aapc duree_travaux'] = duree_travaux
+    
 def update_df_with_json_ccap(json_string, ebp_id, df_update):
     
     parsed_json = json.loads(json_string)
@@ -285,19 +303,30 @@ def update_df_with_json_ccap(json_string, ebp_id, df_update):
     m_oeuvre = parsed_json.get("Maitre oeuvre")
     Lot = parsed_json.get("Lot")
     Tranche = parsed_json.get("Tranche")
+    duree_travaux = parsed_json.get("Duree des travaux")
+    prix_travaux = parsed_json.get("Prix des travaux")
 
     # Mise à jour du df_consult_elevated
     mask = df_update['ID EBP'] == ebp_id
     if objet is not None:
-        df_update.loc[mask, 'objet ccap'] = objet
+        df_update.loc[mask, 'ccap objet'] = objet
     if lieu is not None:
-        df_update.loc[mask, 'lieu ccap'] = lieu
+        if not any(x in lieu for x in mot_exclus):
+            df_update.loc[mask, 'ccap lieu'] = lieu
     if m_ouvrage is not None:
-        df_update.loc[mask, 'm_ouvrage ccap'] = m_ouvrage
+        if not any(x in m_ouvrage for x in mot_exclus):
+            df_update.loc[mask, 'ccap m_ouvrage'] = m_ouvrage
     if m_oeuvre is not None:
-        df_update.loc[mask, 'm_oeuvre ccap'] = m_oeuvre
+        if not any(x in m_oeuvre for x in mot_exclus):
+            df_update.loc[mask, 'ccap m_oeuvre'] = m_oeuvre
     if Lot is not None:
-        df_update.loc[mask, 'Lot ccap'] = Lot
+        if not any(x in Lot for x in mot_exclus):
+            df_update.loc[mask, 'ccap lot'] = Lot
     if Tranche is not None:
-        df_update.loc[mask, 'Tranche ccap'] = Tranche
+        if not any(x in Tranche for x in mot_exclus):
+            df_update.loc[mask, 'ccap tranche'] = Tranche
+    if prix_travaux is not None:
+        df_update.loc[mask, 'ccap prix_travaux'] = prix_travaux
+    if duree_travaux is not None:
+        df_update.loc[mask, 'ccap duree_travaux'] = duree_travaux
     
