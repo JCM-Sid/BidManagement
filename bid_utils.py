@@ -164,6 +164,7 @@ def path_to_link(file_path, option=None):
     else:
         print("warning: Fichier non accessible")
 
+## CCTP
 def update_df_with_json_cctp(json_string, ebp_id, df_update):
     try:
         parsed_json = json.loads(json_string)
@@ -190,13 +191,15 @@ def update_df_with_json_cctp(json_string, ebp_id, df_update):
         if type_travaux_value is not None and not isinstance(type_travaux_value, list):
             df_update.loc[mask, 'cctp type travaux'] = type_travaux_value
         if duree_travaux_value is not None and not isinstance(duree_travaux_value, list):
+            df_update.loc[mask, 'cctp duree travaux'] = duree_travaux_value
+            """
             match = re.search(r"\d+", str(duree_travaux_value))
             if match:
                 duree_int = int(match.group())
                 df_update.loc[mask, 'cctp duree travaux'] = duree_int
             else:
                 df_update.loc[mask, 'cctp duree travaux'] = None
-            df_update.loc[mask, 'cctp duree travaux'] = duree_travaux_value
+            """
         if planning_concept_value is not None and not isinstance(planning_concept_value, list):
             if not any(x in planning_concept_value for x in mot_exclus):
                 df_update.loc[mask, 'cctp planning conception'] = planning_concept_value
@@ -204,12 +207,15 @@ def update_df_with_json_cctp(json_string, ebp_id, df_update):
             if "Non spécifié" not in planning_real_value:
                 df_update.loc[mask, 'cctp planning realisation '] = planning_real_value
         if prix_travaux_value is not None and not isinstance(prix_travaux_value, list):
+            df_update.loc[mask, 'cctp prix travaux'] = prix_travaux_value
+            """
             match = re.search(r"\d+", str(prix_travaux_value))
             if match:
                 prix_int = int(match.group())
                 df_update.loc[mask, 'cctp prix travaux'] = prix_int
             else:
                 df_update.loc[mask, 'cctp prix travaux'] = None
+            """
         if moa_value is not None and not isinstance(moa_value, list):
             if not any(x in moa_value for x in mot_exclus):
                 df_update.loc[mask, 'cctp maitre ouvrage'] = moa_value
@@ -225,39 +231,48 @@ def update_df_with_json_cctp(json_string, ebp_id, df_update):
     except TypeError:
         print("Input is not a string.") 
 
+## Reglement
 def update_df_with_json_regl(json_string, ebp_id, df_update):
     parsed_json = json.loads(json_string)
+    moyen_humain = methodologie = coherence_temps = comprehension_enjeux = critere_technique_global = critere_technique_details = None
+
+    prix = parsed_json.get("Critere Prix")
+    critere_technique = parsed_json.get("Critere Technique")
+    # Si "Critere Technique" est un dictionnaire, extraire les valeurs globales et détaillées
+    if isinstance(critere_technique, dict):
+        critere_technique_global = critere_technique.get("global")
+        critere_technique_details = critere_technique.get("details", {})
+        moyen_humain = critere_technique_details.get("Moyen Humain et Experience")
+        methodologie = critere_technique_details.get("Methodologie")
+        coherence_temps = critere_technique_details.get("Cohérence du temps")
+        comprehension_enjeux = critere_technique_details.get("Compréhension des enjeux")
+    else:
+        critere_technique_global = critere_technique
+        moyen_humain = methodologie = coherence_temps = comprehension_enjeux = None
+
     duree_travaux = parsed_json.get("Duree des travaux")
     prix_travaux = parsed_json.get("Prix des travaux")
-    prix = parsed_json.get("Critere Prix")
-    technique = parsed_json.get("Critere Technique")
-    """
-    parsed_tech = json.loads(technique)
-    moyen_humain = parsed_tech.get("Moyen Humain et Experience")
-    methodologie = technique["Methodologie"]
-    coherence_temps = technique["Cohérence du temps"]
-    """
+  
     # Mise à jour du df_consult_elevated
     mask = df_update['ID EBP'] == ebp_id
     if prix is not None:
         df_update.loc[mask, 'regl crit-prix'] = prix
-    if technique is not None:
-        df_update.loc[mask, 'regl crit-tech'] = technique
+    if critere_technique_global is not None:
+        df_update.loc[mask, 'regl crit-tech global'] = critere_technique_global
     if duree_travaux is not None and not isinstance(duree_travaux, list):
-        #if not any(x in duree_travaux for x in mot_exclus):
-            df_update.loc[mask, 'regl duree-travaux'] = duree_travaux 
+        df_update.loc[mask, 'regl duree-travaux'] = duree_travaux 
     if prix_travaux is not None and not isinstance(prix_travaux, list):
-        #if not any(x in prix_travaux for x in mot_exclus):
-            df_update.loc[mask, 'regl prix travaux'] = prix_travaux
-    """
+        df_update.loc[mask, 'regl prix travaux'] = prix_travaux
     if moyen_humain is not None:
-        df_update.loc[mask, 'Critere Tech-Humain'] = moyen_humain
-    if methodologie is not None:
-        df_update.loc[mask, 'Critere Tech-Method'] = methodologie
-    if coherence_temps is not None:
-        df_update.loc[mask, 'Critere Tech-Temps'] = coherence_temps
-    """
+        df_update.loc[mask, 'regl crit-tech-moyen_humain'] = moyen_humain
+    if methodologie is not None and not isinstance(methodologie, list):
+        df_update.loc[mask, 'regl crit-tech-methodologie'] = methodologie 
+    if coherence_temps is not None and not isinstance(coherence_temps, list):
+        df_update.loc[mask, 'regl crit-tech-coherence_temps'] = coherence_temps
+    if comprehension_enjeux is not None and not isinstance(comprehension_enjeux, list):
+        df_update.loc[mask, 'regl crit-tech-comprehension_enjeux'] = comprehension_enjeux
 
+## AAPC
 def update_df_with_json_aapc(json_string, ebp_id, df_update):
     
     parsed_json = json.loads(json_string)
@@ -292,9 +307,9 @@ def update_df_with_json_aapc(json_string, ebp_id, df_update):
     if duree_travaux is not None:
         #if not any(x in duree_travaux for x in mot_exclus):
             df_update.loc[mask, 'aapc duree_travaux'] = duree_travaux
-    
+
+## CCAP
 def update_df_with_json_ccap(json_string, ebp_id, df_update):
-    
     parsed_json = json.loads(json_string)
 
     objet = parsed_json.get("Objet du marché")  

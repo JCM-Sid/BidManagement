@@ -1,4 +1,5 @@
 ## List Reference Directories and files
+## pour executer .\Script_listfiles.ps1 > "C:\Users\jch_m\ATAE\Nicolas MONCEAU - NICOLAS\Stage_AppelsOffres\data_input\result_scan_AO_v6.txt"
 
 echo "=============================="
 echo "=== Liste ref EBP ============"
