@@ -192,14 +192,7 @@ def update_df_with_json_cctp(json_string, ebp_id, df_update):
             df_update.loc[mask, 'cctp type travaux'] = type_travaux_value
         if duree_travaux_value is not None and not isinstance(duree_travaux_value, list):
             df_update.loc[mask, 'cctp duree travaux'] = duree_travaux_value
-            """
-            match = re.search(r"\d+", str(duree_travaux_value))
-            if match:
-                duree_int = int(match.group())
-                df_update.loc[mask, 'cctp duree travaux'] = duree_int
-            else:
-                df_update.loc[mask, 'cctp duree travaux'] = None
-            """
+            
         if planning_concept_value is not None and not isinstance(planning_concept_value, list):
             if not any(x in planning_concept_value for x in mot_exclus):
                 df_update.loc[mask, 'cctp planning conception'] = planning_concept_value
@@ -208,14 +201,7 @@ def update_df_with_json_cctp(json_string, ebp_id, df_update):
                 df_update.loc[mask, 'cctp planning realisation '] = planning_real_value
         if prix_travaux_value is not None and not isinstance(prix_travaux_value, list):
             df_update.loc[mask, 'cctp prix travaux'] = prix_travaux_value
-            """
-            match = re.search(r"\d+", str(prix_travaux_value))
-            if match:
-                prix_int = int(match.group())
-                df_update.loc[mask, 'cctp prix travaux'] = prix_int
-            else:
-                df_update.loc[mask, 'cctp prix travaux'] = None
-            """
+            
         if moa_value is not None and not isinstance(moa_value, list):
             if not any(x in moa_value for x in mot_exclus):
                 df_update.loc[mask, 'cctp maitre ouvrage'] = moa_value
