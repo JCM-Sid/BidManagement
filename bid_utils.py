@@ -164,10 +164,36 @@ def path_to_link(file_path, option=None):
     else:
         print("warning: Fichier non accessible")
 
+def load_json(text_json):
+        # Délimiteurs du bloc JSON
+    start_delimiter1 = "```json"
+    end_delimiter = "```"
+    pure_json_str= ""
+
+    # Trouver la position du début du JSON
+    start_index1 = text_json.find(start_delimiter1)
+    if start_index1 != -1:
+        start_index = start_index1
+        start_delimiter = start_delimiter1
+
+    # Trouver la position de la fin du JSON
+    json_start = start_index + len(start_delimiter)
+    end_index = text_json.find(end_delimiter, json_start)
+    if end_index == -1:
+        print("Erreur : Le délimiteur de fin JSON n'a pas été trouvé.")
+        return
+    else:
+        # Extraire la sous-chaîne qui contient uniquement le JSON
+        pure_json_str = text_json[json_start:end_index].strip()
+        # Charger la chaîne JSON dans un dictionnaire Python
+        return(json.loads(pure_json_str))
+
+
 ## CCTP
 def update_df_with_json_cctp(json_string, ebp_id, df_update):
     try:
-        parsed_json = json.loads(json_string)
+        #parsed_json = json.loads(json_string)
+        parsed_json = load_json(json_string)
         
         # Extrait chaque clef
         nom_value = parsed_json.get("Nom Chantier")
@@ -219,7 +245,8 @@ def update_df_with_json_cctp(json_string, ebp_id, df_update):
 
 ## Reglement
 def update_df_with_json_regl(json_string, ebp_id, df_update):
-    parsed_json = json.loads(json_string)
+    #parsed_json = json.loads(json_string)
+    parsed_json = load_json(json_string)
     moyen_humain = methodologie = coherence_temps = comprehension_enjeux = critere_technique_global = critere_technique_details = None
 
     prix = parsed_json.get("Critere Prix")
@@ -261,7 +288,8 @@ def update_df_with_json_regl(json_string, ebp_id, df_update):
 ## AAPC
 def update_df_with_json_aapc(json_string, ebp_id, df_update):
     
-    parsed_json = json.loads(json_string)
+    #parsed_json = json.loads(json_string)
+    parsed_json = load_json(json_string)
 
     Mission = parsed_json.get("Mission")
     lieu = parsed_json.get("Lieu du Chantier")
@@ -296,7 +324,8 @@ def update_df_with_json_aapc(json_string, ebp_id, df_update):
 
 ## CCAP
 def update_df_with_json_ccap(json_string, ebp_id, df_update):
-    parsed_json = json.loads(json_string)
+    #parsed_json = json.loads(json_string)
+    parsed_json = load_json(json_string)
 
     objet = parsed_json.get("Objet du marché")  
     lieu = parsed_json.get("Lieu du Chantier")
